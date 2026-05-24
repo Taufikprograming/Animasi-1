@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vellum.Digital - Cinta Interaktif</title>
+    <style>
+      /* RESET & DASAR */
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #050510;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: white;
+      }
+
+      /* CONTAINER 3D */
+      #canvas-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+
+      /* LAYAR AWAL (LANDING SCREEN) */
+      #start-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, #1a0b2e 0%, #050510 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 50;
+        transition: opacity 1s ease-out;
+      }
+      #start-screen h1 {
+        font-size: 3rem;
+        text-shadow: 0 0 20px #ff4d85;
+        margin-bottom: 10px;
+      }
+      .start-btn {
+        padding: 15px 40px;
+        font-size: 1.2rem;
+        color: white;
+        background: linear-gradient(45deg, #ff4d85, #b829ea);
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        box-shadow: 0 0 15px rgba(255, 77, 133, 0.5);
+        transition: transform 0.3s;
+        margin-top: 20px;
+      }
+      .start-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(255, 77, 133, 0.8);
+      }
+
+      /* TOMBOL MENGAMBANG (ICONS) */
+      .ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        pointer-events: none; /* Agar tidak menghalangi rotasi 3D */
+        display: none; /* Disembunyikan awalnya */
+      }
+      .floating-icon {
+        position: absolute;
+        width: 100px;
+        height: 100px; /* Diperbesar agar muka lebih jelas terlihat */
+        background-color: #ff4d85;
+        background-size: cover;
+        background-position: center top; /* Memfokuskan bagian atas/wajah pada foto */
+
+        /* Bentuk Love yang jauh lebih rapi dan simetris */
+        -webkit-mask-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='black'/%3E%3C/svg%3E");
+        mask-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='black'/%3E%3C/svg%3E");
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+
+        cursor: pointer;
+        pointer-events: auto;
+        animation: float 3s ease-in-out infinite;
+        filter: drop-shadow(0 0 12px rgba(255, 77, 133, 0.8));
+        transition:
+          transform 0.3s,
+          filter 0.3s;
+      }
+      .floating-icon:hover {
+        transform: scale(1.15);
+        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));
+      }
+      /* Posisi Icon */
+      .icon-1 {
+        top: 20%;
+        left: 20%;
+        animation-delay: 0s;
+      }
+      .icon-2 {
+        top: 30%;
+        right: 20%;
+        animation-delay: 0.5s;
+      }
+      .icon-3 {
+        bottom: 30%;
+        left: 30%;
+        animation-delay: 1s;
+      }
+      .icon-4 {
+        bottom: 20%;
+        right: 20%;
+        animation-delay: 1.5s;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-15px);
+        }
+      }
+
+      /* MODAL POPUP */
+      .modal {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        background: rgba(20, 5, 25, 0.85);
+        backdrop-filter: blur(10px);
+        padding: 30px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 77, 133, 0.3);
+        text-align: center;
+        z-index: 100;
+        width: 300px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 0 30px rgba(255, 77, 133, 0.2);
+      }
+      .modal.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      .modal h2 {
+        margin-top: 0;
+        color: #ff9cbd;
+      }
+      .close-btn {
+        margin-top: 20px;
+        padding: 8px 20px;
+        background: transparent;
+        border: 1px solid #ff4d85;
+        color: #ff4d85;
+        border-radius: 15px;
+        cursor: pointer;
+      }
+      .close-btn:hover {
+        background: #ff4d85;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="start-screen">
+      <h1>Teruntuk Kamu...</h1>
+      <p>Ada sesuatu yang ingin aku sampaikan dari lubuk hatiku yang terdalam.</p>
+      <button class="start-btn" onclick="startExperience()">Dengarkan Hatiku</button>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer" id="ui-layer">
+      <div
+        class="floating-icon icon-1"
+        style="background-image: url(Asset/pexels-katerina-holmes-5911275.jpg)"
+        onclick="showModal('Senyum Terindah', 'Setiap kali kamu tersenyum, dunia seakan berhenti sejenak. Kamu adalah alasan di balik setiap bahagiaku, hari ini dan selamanya. 😊')"
+      ></div>
+      <div
+        class="floating-icon icon-2"
+        style="background-image: url(Asset/pexels-nasirun-khan-102497153-20434836.jpg)"
+        onclick="showModal('Takdir Terindahku', 'Menemukanmu bukanlah sebuah kebetulan, melainkan takdir terindah yang pernah Tuhan tuliskan dalam kisah hidupku. 🌌')"
+      ></div>
+      <div
+        class="floating-icon icon-3"
+        style="background-image: url(Asset/pexels-phuc-vo-37077358-7489466.jpg)"
+        onclick="showModal('Tempatku Berpulang', 'Dulu aku tak mengerti arti rumah, sampai kehadiranmu menyadarkanku bahwa rumah bukanlah sebuah bangunan, melainkan kamu. 🏡')"
+      ></div>
+      <div
+        class="floating-icon icon-4"
+        style="background-image: url(Asset/pexels-tr-n-long-3093985-5984144.jpg)"
+        onclick="showModal('Satu Untuk Selamanya', 'Terima kasih telah bertahan di sisiku. Aku berjanji, apa pun yang terjadi, tanganku takkan pernah melepaskan genggamanmu. Aku sangat mencintaimu. ❤️')"
+      ></div>
+    </div>
+
+    <div class="modal" id="message-modal">
+      <h2 id="modal-title">Judul</h2>
+      <p id="modal-text">Pesan akan muncul di sini.</p>
+      <button class="close-btn" onclick="closeModal()">Tutup</button>
+    </div>
+
+    <!-- Tag audio untuk lagu latar -->
+    <audio id="bgMusic" src="Asset/Ed Sheeran - Perfect.mp3" loop></audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+      // FUNGSI UNTUK UI (HTML)
+      function startExperience() {
+        // Memutar musik saat tombol diklik
+        const bgMusic = document.getElementById("bgMusic");
+        bgMusic.play();
+
+        document.getElementById("start-screen").style.opacity = "0";
+        setTimeout(() => {
+          document.getElementById("start-screen").style.display = "none";
+          document.getElementById("ui-layer").style.display = "block";
+        }, 1000);
+      }
+
+      function showModal(title, text) {
+        document.getElementById("modal-title").innerText = title;
+        document.getElementById("modal-text").innerText = text;
+        document.getElementById("message-modal").classList.add("active");
+      }
+
+      function closeModal() {
+        document.getElementById("message-modal").classList.remove("active");
+      }
+
+      // ==========================================
+      // SETUP THREE.JS (ANIMASI PARTIKEL HATI 3D)
+      // ==========================================
+      const container = document.getElementById("canvas-container");
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 50;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      // Membuat Partikel Hati
+      const heartGeometry = new THREE.BufferGeometry();
+      const particlesCount = 2000; // Jumlah titik partikel
+      const posArray = new Float32Array(particlesCount * 3);
+
+      // Rumus Matematika untuk bentuk hati (seperti di video)
+      for (let i = 0; i < particlesCount * 3; i += 3) {
+        let t = Math.random() * Math.PI * 2;
+        let scale = Math.random() * 1.5 + 0.5; // Ketebalan partikel
+
+        // Persamaan parametrik Hati
+        let x = 16 * Math.pow(Math.sin(t), 3);
+        let y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+        let z = (Math.random() - 0.5) * 5; // Ketebalan 3D
+
+        posArray[i] = x * scale;
+        posArray[i + 1] = y * scale;
+        posArray[i + 2] = z * scale;
+      }
+
+      heartGeometry.setAttribute("position", new THREE.BufferAttribute(posArray, 3));
+
+      // Material Partikel (Warna Pink Bercahaya)
+      const heartMaterial = new THREE.PointsMaterial({
+        size: 0.3,
+        color: 0xff4d85,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+      });
+
+      const heartMesh = new THREE.Points(heartGeometry, heartMaterial);
+      scene.add(heartMesh);
+
+      // Membuat Latar Belakang Bintang/Galaksi Kecil
+      const starsGeometry = new THREE.BufferGeometry();
+      const starsCount = 1000;
+      const starsPos = new Float32Array(starsCount * 3);
+      for (let i = 0; i < starsCount * 3; i++) {
+        starsPos[i] = (Math.random() - 0.5) * 200;
+      }
+      starsGeometry.setAttribute("position", new THREE.BufferAttribute(starsPos, 3));
+      const starsMaterial = new THREE.PointsMaterial({ size: 0.1, color: 0xffffff });
+      const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
+      scene.add(starsMesh);
+
+      // Fungsi Animasi (Render Loop)
+      let clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        let elapsedTime = clock.getElapsedTime();
+
+        // Rotasi Hati
+        heartMesh.rotation.y = elapsedTime * 0.2;
+
+        // Efek Detak Jantung (Pulse)
+        let scale = 1 + Math.sin(elapsedTime * 2) * 0.05;
+        heartMesh.scale.set(scale, scale, scale);
+
+        // Rotasi Bintang pelan
+        starsMesh.rotation.y = elapsedTime * 0.05;
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Responsive jika layar di-resize
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
